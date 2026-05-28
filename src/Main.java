@@ -1,27 +1,118 @@
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Main {
+
+    // ================= SALVAR USUÁRIOS =================
+
+    public static void salvarUsuarios(ArrayList<Usuario> usuarios) {
+
+        try {
+
+            FileOutputStream arquivo =
+                    new FileOutputStream("usuarios.dat");
+
+            ObjectOutputStream salvar =
+                    new ObjectOutputStream(arquivo);
+
+            salvar.writeObject(usuarios);
+
+            salvar.close();
+
+        } catch (Exception e) {
+
+            System.out.println("Erro ao salvar usuários.");
+        }
+    }
+
+    // ================= CARREGAR USUÁRIOS =================
+
+    public static ArrayList<Usuario> carregarUsuarios() {
+
+        try {
+
+            FileInputStream arquivo =
+                    new FileInputStream("usuarios.dat");
+
+            ObjectInputStream leitura =
+                    new ObjectInputStream(arquivo);
+
+            return (ArrayList<Usuario>) leitura.readObject();
+
+        } catch (Exception e) {
+
+            return new ArrayList<Usuario>();
+        }
+    }
+
+    // ================= SALVAR CHAMADOS =================
+
+    public static void salvarChamados(ArrayList<Chamado> chamados) {
+
+        try {
+
+            FileOutputStream arquivo =
+                    new FileOutputStream("chamados.dat");
+
+            ObjectOutputStream salvar =
+                    new ObjectOutputStream(arquivo);
+
+            salvar.writeObject(chamados);
+
+            salvar.close();
+
+        } catch (Exception e) {
+
+            System.out.println("Erro ao salvar chamados.");
+        }
+    }
+
+    // ================= CARREGAR CHAMADOS =================
+
+    public static ArrayList<Chamado> carregarChamados() {
+
+        try {
+
+            FileInputStream arquivo =
+                    new FileInputStream("chamados.dat");
+
+            ObjectInputStream leitura =
+                    new ObjectInputStream(arquivo);
+
+            return (ArrayList<Chamado>) leitura.readObject();
+
+        } catch (Exception e) {
+
+            return new ArrayList<Chamado>();
+        }
+    }
+
+    // ================= MAIN =================
 
     public static void main(String[] args) {
 
         Scanner sc = new Scanner(System.in);
 
-        Usuario[] usuarios = new Usuario[100];
-        Chamado[] chamados = new Chamado[100];
+        ArrayList<Usuario> usuarios = carregarUsuarios();
+        ArrayList<Chamado> chamados = carregarChamados();
 
-        int totalUsuarios = 0;
-        int totalChamados = 0;
+        // CRIA ADMIN PADRÃO SE NÃO EXISTIR NINGUÉM
+        if (usuarios.isEmpty()) {
 
-        // ADMIN PADRÃO
-        usuarios[totalUsuarios] =
-                new Usuario("admin", "123", true);
+            usuarios.add(new Usuario("admin", "123", true));
 
-        totalUsuarios++;
+            salvarUsuarios(usuarios);
+        }
 
         Usuario usuarioLogado = null;
         boolean loginValido = false;
 
-        // LOGIN INICIAL
+        // LOGIN
         while (!loginValido) {
 
             System.out.println("\n===== LOGIN =====");
@@ -32,13 +123,13 @@ public class Main {
             System.out.print("Senha: ");
             String senhaLogin = sc.nextLine();
 
-            for (int i = 0; i < totalUsuarios; i++) {
+            for (Usuario usuario : usuarios) {
 
-                if (usuarioLogin.equals(usuarios[i].nome)
-                        && senhaLogin.equals(usuarios[i].senha)) {
+                if (usuarioLogin.equals(usuario.nome)
+                        && senhaLogin.equals(usuario.senha)) {
 
                     loginValido = true;
-                    usuarioLogado = usuarios[i];
+                    usuarioLogado = usuario;
 
                     break;
                 }
@@ -88,19 +179,22 @@ public class Main {
                     System.out.print("Descrição: ");
                     String descricao = sc.nextLine();
 
-                    chamados[totalChamados] =
+                    int novoId = chamados.size() + 1;
+
+                    Chamado novoChamado =
                             new Chamado(
-                                    totalChamados + 1,
+                                    novoId,
                                     descricao,
                                     "Baixa",
                                     usuarioLogado.nome
                             );
 
-                    System.out.println("Chamado aberto com sucesso!");
-                    System.out.println("Número do chamado: "
-                            + chamados[totalChamados].id);
+                    chamados.add(novoChamado);
 
-                    totalChamados++;
+                    salvarChamados(chamados);
+
+                    System.out.println("Chamado aberto com sucesso!");
+                    System.out.println("Número do chamado: " + novoChamado.id);
                 }
 
                 // LISTAR CHAMADOS ATIVOS
@@ -110,22 +204,22 @@ public class Main {
 
                     boolean encontrou = false;
 
-                    for (int i = 0; i < totalChamados; i++) {
+                    for (Chamado chamado : chamados) {
 
                         boolean ativo =
-                                chamados[i].status.equals("Aberto")
-                                        || chamados[i].status.equals("Andamento");
+                                chamado.status.equals("Aberto")
+                                        || chamado.status.equals("Andamento");
 
                         if (ativo) {
 
-                            if (usuarioLogado.admin ||
-                                    chamados[i].usuario.equals(usuarioLogado.nome)) {
+                            if (usuarioLogado.admin
+                                    || chamado.usuario.equals(usuarioLogado.nome)) {
 
-                                System.out.println("ID: " + chamados[i].id);
-                                System.out.println("Usuário: " + chamados[i].usuario);
-                                System.out.println("Descrição: " + chamados[i].descricao);
-                                System.out.println("Prioridade: " + chamados[i].prioridade);
-                                System.out.println("Status: " + chamados[i].status);
+                                System.out.println("ID: " + chamado.id);
+                                System.out.println("Usuário: " + chamado.usuario);
+                                System.out.println("Descrição: " + chamado.descricao);
+                                System.out.println("Prioridade: " + chamado.prioridade);
+                                System.out.println("Status: " + chamado.status);
 
                                 System.out.println();
 
@@ -147,22 +241,22 @@ public class Main {
 
                     boolean encontrou = false;
 
-                    for (int i = 0; i < totalChamados; i++) {
+                    for (Chamado chamado : chamados) {
 
                         boolean finalizado =
-                                chamados[i].status.equals("Concluído")
-                                        || chamados[i].status.equals("Encerrado");
+                                chamado.status.equals("Concluído")
+                                        || chamado.status.equals("Encerrado");
 
                         if (finalizado) {
 
-                            if (usuarioLogado.admin ||
-                                    chamados[i].usuario.equals(usuarioLogado.nome)) {
+                            if (usuarioLogado.admin
+                                    || chamado.usuario.equals(usuarioLogado.nome)) {
 
-                                System.out.println("ID: " + chamados[i].id);
-                                System.out.println("Usuário: " + chamados[i].usuario);
-                                System.out.println("Descrição: " + chamados[i].descricao);
-                                System.out.println("Prioridade: " + chamados[i].prioridade);
-                                System.out.println("Status: " + chamados[i].status);
+                                System.out.println("ID: " + chamado.id);
+                                System.out.println("Usuário: " + chamado.usuario);
+                                System.out.println("Descrição: " + chamado.descricao);
+                                System.out.println("Prioridade: " + chamado.prioridade);
+                                System.out.println("Status: " + chamado.status);
 
                                 System.out.println();
 
@@ -186,20 +280,20 @@ public class Main {
 
                     boolean encontrado = false;
 
-                    for (int i = 0; i < totalChamados; i++) {
+                    for (Chamado chamado : chamados) {
 
-                        if (chamados[i].id == busca) {
+                        if (chamado.id == busca) {
 
-                            if (usuarioLogado.admin ||
-                                    chamados[i].usuario.equals(usuarioLogado.nome)) {
+                            if (usuarioLogado.admin
+                                    || chamado.usuario.equals(usuarioLogado.nome)) {
 
                                 System.out.println("\n===== CHAMADO =====");
 
-                                System.out.println("ID: " + chamados[i].id);
-                                System.out.println("Usuário: " + chamados[i].usuario);
-                                System.out.println("Descrição: " + chamados[i].descricao);
-                                System.out.println("Prioridade: " + chamados[i].prioridade);
-                                System.out.println("Status: " + chamados[i].status);
+                                System.out.println("ID: " + chamado.id);
+                                System.out.println("Usuário: " + chamado.usuario);
+                                System.out.println("Descrição: " + chamado.descricao);
+                                System.out.println("Prioridade: " + chamado.prioridade);
+                                System.out.println("Status: " + chamado.status);
 
                                 encontrado = true;
                             }
@@ -229,10 +323,9 @@ public class Main {
                         boolean admin = sc.nextBoolean();
                         sc.nextLine();
 
-                        usuarios[totalUsuarios] =
-                                new Usuario(nome, senha, admin);
+                        usuarios.add(new Usuario(nome, senha, admin));
 
-                        totalUsuarios++;
+                        salvarUsuarios(usuarios);
 
                         System.out.println("Usuário cadastrado com sucesso!");
 
@@ -253,9 +346,9 @@ public class Main {
 
                         boolean alterado = false;
 
-                        for (int i = 0; i < totalChamados; i++) {
+                        for (Chamado chamado : chamados) {
 
-                            if (chamados[i].id == id) {
+                            if (chamado.id == id) {
 
                                 System.out.println("\n1 - Aberto");
                                 System.out.println("2 - Andamento");
@@ -268,16 +361,18 @@ public class Main {
 
                                 switch (status) {
 
-                                    case 1 -> chamados[i].status = "Aberto";
-                                    case 2 -> chamados[i].status = "Andamento";
-                                    case 3 -> chamados[i].status = "Concluído";
-                                    case 4 -> chamados[i].status = "Encerrado";
+                                    case 1 -> chamado.status = "Aberto";
+                                    case 2 -> chamado.status = "Andamento";
+                                    case 3 -> chamado.status = "Concluído";
+                                    case 4 -> chamado.status = "Encerrado";
 
                                     default -> {
                                         System.out.println("Opção inválida!");
                                         break;
                                     }
                                 }
+
+                                salvarChamados(chamados);
 
                                 alterado = true;
 
@@ -307,9 +402,9 @@ public class Main {
 
                         boolean alterado = false;
 
-                        for (int i = 0; i < totalChamados; i++) {
+                        for (Chamado chamado : chamados) {
 
-                            if (chamados[i].id == id) {
+                            if (chamado.id == id) {
 
                                 System.out.println("\n1 - Baixa");
                                 System.out.println("2 - Média");
@@ -322,16 +417,18 @@ public class Main {
 
                                 switch (prioridade) {
 
-                                    case 1 -> chamados[i].prioridade = "Baixa";
-                                    case 2 -> chamados[i].prioridade = "Média";
-                                    case 3 -> chamados[i].prioridade = "Alta";
-                                    case 4 -> chamados[i].prioridade = "Crítica";
+                                    case 1 -> chamado.prioridade = "Baixa";
+                                    case 2 -> chamado.prioridade = "Média";
+                                    case 3 -> chamado.prioridade = "Alta";
+                                    case 4 -> chamado.prioridade = "Crítica";
 
                                     default -> {
                                         System.out.println("Opção inválida!");
                                         break;
                                     }
                                 }
+
+                                salvarChamados(chamados);
 
                                 alterado = true;
 
@@ -357,11 +454,11 @@ public class Main {
 
                         System.out.println("\n===== USUÁRIOS =====");
 
-                        for (int i = 0; i < totalUsuarios; i++) {
+                        for (Usuario usuario : usuarios) {
 
-                            System.out.println("Nome: " + usuarios[i].nome);
+                            System.out.println("Nome: " + usuario.nome);
 
-                            if (usuarios[i].admin) {
+                            if (usuario.admin) {
 
                                 System.out.println("Tipo: Admin");
 
@@ -395,13 +492,13 @@ public class Main {
                         System.out.print("Senha: ");
                         String novaSenha = sc.nextLine();
 
-                        for (int i = 0; i < totalUsuarios; i++) {
+                        for (Usuario usuario : usuarios) {
 
-                            if (novoUsuario.equals(usuarios[i].nome)
-                                    && novaSenha.equals(usuarios[i].senha)) {
+                            if (novoUsuario.equals(usuario.nome)
+                                    && novaSenha.equals(usuario.senha)) {
 
                                 loginValido = true;
-                                usuarioLogado = usuarios[i];
+                                usuarioLogado = usuario;
 
                                 break;
                             }
