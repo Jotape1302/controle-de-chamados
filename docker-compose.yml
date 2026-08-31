@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  backend:
+    image: eclipse-temurin:17-jdk-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+      - ~/.m2:/root/.m2
+    command: ./mvnw spring-boot:run
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_PORT=8080
+
+  frontend:
+    image: node:20-alpine
+    working_dir: /app/frontend
+    volumes:
+      - .:/app
+    command: sh -c "npm install && npm run dev -- --host"
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
