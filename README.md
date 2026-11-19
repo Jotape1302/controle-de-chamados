@@ -93,7 +93,7 @@ cd frontend && npm ci && npm run dev   # Front-end em http://localhost:5173
 |---|---|
 | Aplicação | http://localhost:5173 |
 | Swagger | http://localhost:8080/swagger-ui.html |
-| Console H2 | http://localhost:8080/h2-console (JDBC URL: `jdbc:h2:file:./data/ticketsdb`) |
+| Console H2 | http://localhost:8080/h2-console (JDBC URL: `jdbc:h2:file:./data/homeney-dev`) |
 
 **Usuários de desenvolvimento** (criados automaticamente apenas no perfil `dev`):
 
@@ -103,7 +103,6 @@ cd frontend && npm ci && npm run dev   # Front-end em http://localhost:5173
 | `jotape` | `jotape123` | ADMIN |
 | `operador` | `operador123` | USER |
 
-> Se você já rodou uma versão anterior do projeto, apague a pasta `./data` antes de subir: o schema agora é criado pelo Flyway.
 
 ### Produção local (Docker Compose + PostgreSQL)
 
