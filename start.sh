@@ -11,8 +11,9 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-if ! command -v java >/dev/null 2>&1; then
-    echo "ERRO: Java 17+ não encontrado no PATH." >&2
+if ! command -v javac >/dev/null 2>&1; then
+    echo "ERRO: JDK 17+ (com o compilador javac) não encontrado no PATH." >&2
+    echo "      Ter só o 'java' (JRE) não basta. No Fedora: sudo dnf install java-25-openjdk-devel" >&2
     exit 1
 fi
 

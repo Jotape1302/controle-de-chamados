@@ -73,7 +73,7 @@ Organização do back-end (`src/main/java/com/homeney/ticketsystem`):
 
 ### Pré-requisitos
 
-- **Desenvolvimento:** Java 17+ e Node.js 20+
+- **Desenvolvimento:** JDK 17+ (com `javac`; no Fedora: `sudo dnf install java-25-openjdk-devel`) e Node.js 20+
 - **Produção local:** Docker com Docker Compose
 
 ### Desenvolvimento (H2 + dados de exemplo)
