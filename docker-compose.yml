@@ -1,25 +1,45 @@
-version: '3.8'
-
+# Ambiente completo (produção local): PostgreSQL + API Spring Boot + Nginx com o front-end.
+# Uso: cp .env.example .env  (edite os valores)  &&  docker compose up -d --build
 services:
-  backend:
-    image: eclipse-temurin:17-jdk-alpine
-    working_dir: /app
-    volumes:
-      - .:/app
-      - ~/.m2:/root/.m2
-    command: ./mvnw spring-boot:run
-    ports:
-      - "8080:8080"
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
     environment:
-      - SERVER_PORT=8080
-
-  frontend:
-    image: node:20-alpine
-    working_dir: /app/frontend
+      POSTGRES_DB: ${POSTGRES_DB:-homeney}
+      POSTGRES_USER: ${POSTGRES_USER:-homeney}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
     volumes:
-      - .:/app
-    command: sh -c "npm install && npm run dev -- --host"
-    ports:
-      - "5173:5173"
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    restart: unless-stopped
     depends_on:
-      - backend
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-homeney}
+      DB_USERNAME: ${POSTGRES_USER:-homeney}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?defina JWT_SECRET no .env (min. 32 caracteres)}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-false}
+
+  web:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${WEB_PORT:-3000}:80"
+
+volumes:
+  pgdata:

@@ -55,6 +55,23 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- PostgreSQL (produção) -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Migrações versionadas de banco -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+
         <!-- OpenAPI / Swagger Documentation -->
         <dependency>
             <groupId>org.springdoc</groupId>

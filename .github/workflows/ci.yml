@@ -46,3 +46,14 @@ jobs:
         run: npm test
       - name: Build
         run: npm run build
+
+  docker:
+    name: Imagens Docker
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build da imagem da API
+        run: docker build -t homeney-api .
+      - name: Build da imagem do front-end
+        run: docker build -t homeney-web ./frontend
