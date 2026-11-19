@@ -10,6 +10,8 @@
     "build:frontend": "cd frontend && npm run build",
     "build": "./mvnw clean package -DskipTests && cd frontend && npm run build",
     "test:backend": "./mvnw test",
-    "test": "./mvnw test"
+    "test": "./mvnw test && cd frontend && npm test",
+    "lint": "cd frontend && npm run lint",
+    "test:frontend": "cd frontend && npm test"
   }
 }

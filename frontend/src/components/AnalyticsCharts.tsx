@@ -13,6 +13,19 @@ import {
 } from 'recharts';
 import { Metrics } from '../types';
 
+interface ChartTooltipEntry {
+  name?: string;
+  value?: number | string;
+  color?: string;
+  stroke?: string;
+}
+
+interface ChartTooltipProps {
+  active?: boolean;
+  payload?: ChartTooltipEntry[];
+  label?: string | number;
+}
+
 interface AnalyticsChartsProps {
   metrics: Metrics | null;
 }
@@ -43,12 +56,12 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ metrics }) => 
     color: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
   }));
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-[#16181D] border border-zinc-700 p-2.5 shadow-lg text-xs font-mono">
           <p className="text-zinc-300 font-semibold mb-1 border-b border-zinc-700/80 pb-1">{label}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry, index) => (
             <div key={index} className="flex items-center justify-between gap-3 text-zinc-300">
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5" style={{ backgroundColor: entry.color || entry.stroke }} />
