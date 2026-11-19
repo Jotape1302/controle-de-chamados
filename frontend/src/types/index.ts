@@ -67,3 +67,18 @@ export interface FilterState {
   search: string;
   viewMode: 'table' | 'kanban';
 }
+
+export interface NewUserInput {
+  username: string;
+  password: string;
+  fullName?: string;
+  email?: string;
+  admin: boolean;
+}
+
+export interface LoginResponse {
+  accessToken: string;
+  tokenType: 'Bearer';
+  expiresAt: string;
+  user: User;
+}

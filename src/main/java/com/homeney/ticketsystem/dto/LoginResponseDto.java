@@ -1,41 +1,13 @@
 package com.homeney.ticketsystem.dto;
 
-public class LoginResponseDto {
+import java.time.Instant;
 
-    private boolean success;
-    private String message;
-    private UserDto user;
+/**
+ * Resposta de login bem-sucedido: token Bearer e dados públicos do usuário.
+ */
+public record LoginResponseDto(String accessToken, String tokenType, Instant expiresAt, UserDto user) {
 
-    public LoginResponseDto() {
-    }
-
-    public LoginResponseDto(boolean success, String message, UserDto user) {
-        this.success = success;
-        this.message = message;
-        this.user = user;
-    }
-
-    public boolean isSuccess() {
-        return success;
-    }
-
-    public void setSuccess(boolean success) {
-        this.success = success;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public UserDto getUser() {
-        return user;
-    }
-
-    public void setUser(UserDto user) {
-        this.user = user;
+    public static LoginResponseDto bearer(String accessToken, Instant expiresAt, UserDto user) {
+        return new LoginResponseDto(accessToken, "Bearer", expiresAt, user);
     }
 }

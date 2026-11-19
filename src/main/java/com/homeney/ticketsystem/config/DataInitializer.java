@@ -7,28 +7,38 @@ import com.homeney.ticketsystem.model.User;
 import com.homeney.ticketsystem.repository.TicketRepository;
 import com.homeney.ticketsystem.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
+/**
+ * Popula o banco com usuários e chamados de exemplo. Roda apenas no perfil {@code dev}.
+ */
 @Component
+@Profile("dev")
 public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
     private final TicketRepository ticketRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public DataInitializer(UserRepository userRepository, TicketRepository ticketRepository) {
+    public DataInitializer(UserRepository userRepository, TicketRepository ticketRepository,
+                           PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.ticketRepository = ticketRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public void run(String... args) {
         // Seed Users if empty
         if (userRepository.count() == 0) {
-            User admin = new User("admin", "123", "Administrador do Sistema", "admin@homeney.tech", true);
-            User operator = new User("operador", "123", "Operador de Suporte", "operador@homeney.tech", false);
-            User techLead = new User("jotape", "123", "João Paulo (Engenheiro)", "jotape@homeney.tech", true);
+            // Credenciais de desenvolvimento (documentadas no README). Não existem em produção.
+            User admin = new User("admin", passwordEncoder.encode("admin123"), "Administrador do Sistema", "admin@homeney.tech", true);
+            User operator = new User("operador", passwordEncoder.encode("operador123"), "Operador de Suporte", "operador@homeney.tech", false);
+            User techLead = new User("jotape", passwordEncoder.encode("jotape123"), "João Paulo (Engenheiro)", "jotape@homeney.tech", true);
 
             userRepository.save(admin);
             userRepository.save(operator);

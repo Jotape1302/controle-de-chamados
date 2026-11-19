@@ -8,13 +8,13 @@ import {
   AlertTriangle,
   CheckCircle2
 } from 'lucide-react';
-import { User } from '../types';
+import { User, NewUserInput } from '../types';
 
 interface UserManagementModalProps {
   isOpen: boolean;
   onClose: () => void;
   users: User[];
-  onAddUser: (userData: { username: string; password?: string; fullName?: string; email?: string; admin: boolean }) => Promise<void>;
+  onAddUser: (userData: NewUserInput) => Promise<void>;
 }
 
 export const UserManagementModal: React.FC<UserManagementModalProps> = ({
@@ -24,7 +24,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
   onAddUser,
 }) => {
   const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('123');
+  const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
@@ -40,27 +40,31 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
       setError('Nome de usuário é obrigatório.');
       return;
     }
+    if (password.length < 8) {
+      setError('A senha deve ter pelo menos 8 caracteres.');
+      return;
+    }
 
     try {
       setIsSubmitting(true);
       setError(null);
       await onAddUser({
         username: username.trim(),
-        password: password.trim(),
-        fullName: fullName.trim() || username.trim(),
-        email: email.trim() || `${username.trim().toLowerCase()}@homeney.tech`,
+        password,
+        fullName: fullName.trim() || undefined,
+        email: email.trim() || undefined,
         admin: isAdmin,
       });
 
       setSuccess(`Usuário '${username}' cadastrado com sucesso!`);
       setUsername('');
-      setPassword('123');
+      setPassword('');
       setFullName('');
       setEmail('');
       setIsAdmin(false);
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao cadastrar usuário.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao cadastrar usuário.');
     } finally {
       setIsSubmitting(false);
     }
@@ -128,10 +132,12 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-zinc-400 mb-1">Senha *</label>
+                <label className="block text-zinc-400 mb-1">Senha * (mín. 8 caracteres)</label>
                 <input
                   type="password"
                   required
+                  minLength={8}
+                  autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-[#111216] border border-zinc-800 focus:border-zinc-500 px-3 py-1.5 text-white focus:outline-none"

@@ -7,6 +7,9 @@ import com.homeney.ticketsystem.model.Ticket;
 import com.homeney.ticketsystem.model.TicketPriority;
 import com.homeney.ticketsystem.model.TicketStatus;
 import com.homeney.ticketsystem.repository.TicketRepository;
+import com.homeney.ticketsystem.security.Role;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,7 +57,7 @@ public class TicketService {
     }
 
     @Transactional
-    public TicketResponseDto createTicket(TicketRequestDto request) {
+    public TicketResponseDto createTicket(TicketRequestDto request, String authenticatedUsername) {
         TicketPriority priority = TicketPriority.LOW;
         if (request.getPriority() != null && !request.getPriority().isBlank()) {
             priority = TicketPriority.fromString(request.getPriority());
@@ -68,7 +71,9 @@ public class TicketService {
                 request.getTitle(),
                 request.getDescription(),
                 priority,
-                request.getRequester(),
+                (request.getRequester() == null || request.getRequester().isBlank())
+                        ? authenticatedUsername
+                        : request.getRequester().trim(),
                 category
         );
 
@@ -81,7 +86,7 @@ public class TicketService {
     }
 
     @Transactional
-    public TicketResponseDto updateTicket(Long id, TicketRequestDto request) {
+    public TicketResponseDto updateTicket(Long id, TicketRequestDto request, Authentication authentication) {
         Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Chamado com ID " + id + " não foi encontrado."));
 
@@ -92,7 +97,11 @@ public class TicketService {
             ticket.setDescription(request.getDescription());
         }
         if (request.getPriority() != null && !request.getPriority().isBlank()) {
-            ticket.setPriority(TicketPriority.fromString(request.getPriority()));
+            TicketPriority newPriority = TicketPriority.fromString(request.getPriority());
+            if (newPriority != ticket.getPriority() && !Role.isAdmin(authentication)) {
+                throw new AccessDeniedException("Apenas administradores podem alterar a prioridade.");
+            }
+            ticket.setPriority(newPriority);
         }
         if (request.getCategory() != null && !request.getCategory().isBlank()) {
             ticket.setCategory(request.getCategory());
@@ -136,10 +145,14 @@ public class TicketService {
     }
 
     @Transactional
-    public void deleteTicket(Long id) {
-        if (!ticketRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Chamado com ID " + id + " não foi encontrado.");
+    public void deleteTicket(Long id, Authentication authentication) {
+        Ticket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Chamado com ID " + id + " não foi encontrado."));
+
+        boolean isRequester = ticket.getRequester().equals(authentication.getName());
+        if (!Role.isAdmin(authentication) && !isRequester) {
+            throw new AccessDeniedException("Apenas administradores ou o solicitante podem excluir este chamado.");
         }
-        ticketRepository.deleteById(id);
+        ticketRepository.delete(ticket);
     }
 }

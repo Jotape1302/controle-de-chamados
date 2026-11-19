@@ -17,8 +17,8 @@ public class TicketRequestDto {
 
     private String category;
 
-    @NotBlank(message = "O solicitante é obrigatório.")
-    private String requester;
+    @Size(max = 50, message = "O solicitante deve ter no máximo 50 caracteres.")
+    private String requester; // opcional: se vazio, usa o usuário autenticado
 
     private String assignedTo;
 

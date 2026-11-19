@@ -109,8 +109,8 @@ export const NewTicketModal: React.FC<NewTicketModalProps> = ({
       setPriority('Baixa');
       setAssignedTo('');
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Erro ao criar chamado.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao criar chamado.');
     } finally {
       setIsSubmitting(false);
     }

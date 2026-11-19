@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,7 +19,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/tickets")
 @Tag(name = "Chamados (Tickets)", description = "Endpoints para gerenciamento do ciclo de vida de chamados e tickets de suporte")
-@CrossOrigin(origins = "*")
 public class TicketController {
 
     private final TicketService ticketService;
@@ -47,9 +48,12 @@ public class TicketController {
     }
 
     @PostMapping
-    @Operation(summary = "Abrir novo chamado", description = "Cria um novo chamado com prioridade, solicitante e categoria informados")
-    public ResponseEntity<TicketResponseDto> createTicket(@Valid @RequestBody TicketRequestDto request) {
-        TicketResponseDto created = ticketService.createTicket(request);
+    @Operation(summary = "Abrir novo chamado", description = "Cria um novo chamado. Se o solicitante não for informado, usa o usuário autenticado.")
+    public ResponseEntity<TicketResponseDto> createTicket(
+            @Valid @RequestBody TicketRequestDto request,
+            Authentication authentication
+    ) {
+        TicketResponseDto created = ticketService.createTicket(request, authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
@@ -57,9 +61,10 @@ public class TicketController {
     @Operation(summary = "Atualizar chamado completo", description = "Atualiza todas as informações do chamado identificado por ID")
     public ResponseEntity<TicketResponseDto> updateTicket(
             @PathVariable Long id,
-            @Valid @RequestBody TicketRequestDto request
+            @Valid @RequestBody TicketRequestDto request,
+            Authentication authentication
     ) {
-        TicketResponseDto updated = ticketService.updateTicket(id, request);
+        TicketResponseDto updated = ticketService.updateTicket(id, request, authentication);
         return ResponseEntity.ok(updated);
     }
 
@@ -74,7 +79,8 @@ public class TicketController {
     }
 
     @PatchMapping("/{id}/priority")
-    @Operation(summary = "Alterar prioridade do chamado", description = "Atualiza de forma rápida a prioridade do chamado (Baixa, Média, Alta, Crítica)")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Alterar prioridade do chamado", description = "Atualiza a prioridade do chamado (Baixa, Média, Alta, Crítica). Requer perfil ADMIN.")
     public ResponseEntity<TicketResponseDto> updatePriority(
             @PathVariable Long id,
             @Valid @RequestBody TicketPriorityUpdateDto priorityDto
@@ -84,9 +90,9 @@ public class TicketController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Excluir chamado", description = "Remove um chamado pelo seu ID")
-    public ResponseEntity<Void> deleteTicket(@PathVariable Long id) {
-        ticketService.deleteTicket(id);
+    @Operation(summary = "Excluir chamado", description = "Remove um chamado. Permitido para ADMIN ou para o próprio solicitante.")
+    public ResponseEntity<Void> deleteTicket(@PathVariable Long id, Authentication authentication) {
+        ticketService.deleteTicket(id, authentication);
         return ResponseEntity.noContent().build();
     }
 }

@@ -3,17 +3,15 @@ import {
   Plus, 
   RefreshCw, 
   Users, 
-  ShieldCheck, 
-  Server, 
-  Activity,
-  Layers
+  ShieldCheck,
+  Layers,
+  LogOut
 } from 'lucide-react';
 import { User } from '../types';
 
 interface HeaderProps {
   currentUser: User;
-  users: User[];
-  onSelectUser: (user: User) => void;
+  onLogout: () => void;
   onOpenNewTicket: () => void;
   onOpenUserManagement: () => void;
   onRefresh: () => void;
@@ -23,8 +21,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   currentUser,
-  users,
-  onSelectUser,
+  onLogout,
   onOpenNewTicket,
   onOpenUserManagement,
   onRefresh,
@@ -53,14 +50,6 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="text-zinc-300">
               {apiConnected ? 'API Online' : 'API Desconectada'}
             </span>
-          </span>
-          <span className="text-zinc-700">|</span>
-          <span className="hidden sm:inline text-zinc-400">
-            Node: <span className="text-zinc-300">core-prod-01</span>
-          </span>
-          <span className="hidden md:inline text-zinc-700">|</span>
-          <span className="hidden md:inline text-zinc-400">
-            SLA Target: <span className="text-zinc-300 font-semibold">99.9%</span>
           </span>
         </div>
 
@@ -93,9 +82,9 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Action Controls */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Operator Switcher */}
-          <div className="flex items-center bg-zinc-900/80 border border-zinc-800 px-2 py-1 text-xs">
-            <div className="flex items-center gap-1.5 text-zinc-300 pr-2 border-r border-zinc-800">
+          {/* Usuário autenticado */}
+          <div className="flex items-center bg-zinc-900/80 border border-zinc-800 text-xs">
+            <div className="flex items-center gap-1.5 text-zinc-300 px-2 py-1.5">
               <ShieldCheck className={`w-3.5 h-3.5 ${currentUser.admin ? 'text-zinc-200' : 'text-zinc-400'}`} />
               <span className="font-medium">{currentUser.fullName || currentUser.username}</span>
               <span className={`text-[10px] font-mono px-1 py-0.2 ${
@@ -104,21 +93,14 @@ export const Header: React.FC<HeaderProps> = ({
                 {currentUser.admin ? 'ADMIN' : 'USER'}
               </span>
             </div>
-
-            <select
-              value={currentUser.username}
-              onChange={(e) => {
-                const selected = users.find(u => u.username === e.target.value);
-                if (selected) onSelectUser(selected);
-              }}
-              className="bg-transparent text-zinc-300 text-xs pl-2 pr-1 py-0.5 focus:outline-none cursor-pointer font-sans"
+            <button
+              onClick={onLogout}
+              className="px-2 py-1.5 border-l border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+              title="Sair"
+              aria-label="Sair"
             >
-              {users.map(u => (
-                <option key={u.id || u.username} value={u.username} className="bg-[#111216] text-zinc-200">
-                  {u.username} {u.admin ? '(Admin)' : ''}
-                </option>
-              ))}
-            </select>
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
           </div>
 
           {/* User Management (Admin only) */}
