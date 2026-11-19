@@ -1,167 +1,185 @@
-# 🛡️ Homeney — Enterprise Incident & SLA Management (v2.0)
+# Homeney — Controle de Chamados
 
-> Sistema corporativo de missão crítica para gestão de chamados, suporte técnico e controle de SLA construído com **Back-end Spring Boot 3 (Java 17)** e interface web **React + Vite + TypeScript (Enterprise Dark Mode)**.
+[![CI](https://github.com/Jotape1302/controle-de-chamados/actions/workflows/ci.yml/badge.svg)](https://github.com/Jotape1302/controle-de-chamados/actions/workflows/ci.yml)
+![Java](https://img.shields.io/badge/Java-17-2563eb?logo=openjdk)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5-6db33f?logo=springboot)
+![React](https://img.shields.io/badge/React-18-61dafb?logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript)
+![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
-![Status](https://img.shields.io/badge/Status-Production--Ready-22c55e?style=for-the-badge&logo=shield)
-![Java](https://img.shields.io/badge/Java-17-2563eb?style=for-the-badge&logo=openjdk)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.2.5-6db33f?style=for-the-badge&logo=springboot)
-![React](https://img.shields.io/badge/React-18.3-61dafb?style=for-the-badge&logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178c6?style=for-the-badge&logo=typescript)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38bdf8?style=for-the-badge&logo=tailwindcss)
+Sistema de gestão de chamados de suporte técnico com controle de SLA por prioridade, painel de métricas e visualização em tabela ou Kanban.
+
+Projeto de portfólio full-stack: API REST em **Spring Boot 3** com autenticação **JWT**, banco **PostgreSQL** versionado com **Flyway**, front-end em **React + TypeScript**, testes automatizados e CI no GitHub Actions.
 
 ---
 
-## 🏛️ Arquitetura do Sistema
+## Funcionalidades
+
+- **Autenticação JWT** com senhas em BCrypt e dois perfis de acesso (`ADMIN` e `USER`)
+- **Chamados**: abertura, edição, mudança de status e prioridade, exclusão
+- **SLA automático** por prioridade (Crítica 2h · Alta 8h · Média 24h · Baixa 72h) com indicação de atraso
+- **Painel de métricas**: chamados ativos, críticos, taxa de cumprimento de SLA e tempo médio de resolução (MTTR)
+- **Gráficos**: volume de chamados nos últimos 7 dias e distribuição por prioridade/categoria
+- **Tabela e Kanban**, com busca e filtros por status, prioridade e categoria
+- **Gestão de usuários** (somente administradores)
+
+### Regras de permissão
+
+| Ação | USER | ADMIN |
+|---|:-:|:-:|
+| Ver, abrir e atualizar status de chamados | ✅ | ✅ |
+| Alterar prioridade | ❌ | ✅ |
+| Excluir chamado | só os próprios | ✅ |
+| Cadastrar usuários | ❌ | ✅ |
+
+As regras são aplicadas **no back-end**; o front-end apenas esconde o que o usuário não pode fazer.
+
+---
+
+## Arquitetura
 
 ```mermaid
-graph TD
-    subgraph Frontend ["Front-end (React + Vite + TypeScript)"]
-        UI[Enterprise Incident Dashboard]
-        HUD[KPI Overview & SLA Tracking]
-        Charts[Analytics & Risk Distribution]
-        Views[Table & Kanban Views]
-        Modal[Incident Creation & Audit Modal]
+graph LR
+    subgraph Browser
+        UI[React + Vite + TypeScript]
     end
 
-    subgraph Backend ["Back-end (Spring Boot 3.2 + Java 17)"]
-        TC["TicketController (/api/tickets)"]
-        MC["MetricsController (/api/metrics)"]
-        UC["UserController (/api/users)"]
-        HC["HealthController (/api/health)"]
-        TS[TicketService]
-        MS[MetricsService]
-        US[UserService]
-        TR[(TicketRepository)]
-        UR[(UserRepository)]
-        H2[(Database H2 / JPA)]
+    subgraph Docker
+        NGINX[Nginx<br/>estáticos + proxy /api]
+        API[Spring Boot 3.5<br/>REST + Spring Security JWT]
+        DB[(PostgreSQL 16<br/>Flyway)]
     end
 
-    UI --> |REST / JSON| TC
-    HUD --> |GET /api/metrics| MC
-    Views --> |GET /api/tickets| TC
-    Modal --> |POST & PUT /api/tickets| TC
-    TC --> TS --> TR --> H2
-    MC --> MS --> TR
-    UC --> US --> UR --> H2
+    UI -->|HTTPS| NGINX
+    NGINX -->|/api| API
+    API --> DB
 ```
 
----
+Organização do back-end (`src/main/java/com/homeney/ticketsystem`):
 
-## 🎨 Design System & Identidade Visual (Enterprise Dark)
-
-O design foi estruturado com foco em sobriedade e precisão técnica (estilo **Vercel**, **Linear**, **Datadog** e **Grafana Enterprise**):
-
-- **Geometria Estrita**: Bordas retas (`rounded-none` / `rounded-sm`), eliminando raios excessivos e ornamentos supérfluos.
-- **Superfícies & Contraste**: Fundo `#0B0C0E` e cartões `#111216` com bordas precisas em `border-zinc-800`.
-- **Cores de Estado Funcionais**:
-  - **Ações Primárias**: Neutro de alto contraste (`bg-zinc-100 text-zinc-950 hover:bg-white`) e azul corporativo (`#3b82f6`).
-  - **Crítico / Urgente**: Vermelho `#ef4444` sólido.
-  - **Em Análise**: Âmbar `#eab308`.
-  - **Resolvido**: Esmeralda `#22c55e`.
-  - **Encerrado / Baixa**: Neutro `#71717a` / `#27272a`.
-- **Tipografia**: `Inter` para hierarquia corporativa e `Geist Mono` para números de protocolo, logs e métricas.
+| Pacote | Responsabilidade |
+|---|---|
+| `controller` | Endpoints REST e documentação OpenAPI |
+| `service` | Regras de negócio e autorização por recurso |
+| `repository` | Acesso a dados (Spring Data JPA) |
+| `model` / `dto` | Entidades JPA e contratos da API |
+| `security` | Configuração do Spring Security, emissão e validação de JWT, CORS |
+| `exception` | Tratamento centralizado de erros |
+| `config` | OpenAPI, dados de exemplo (dev) e criação do admin inicial (prod) |
 
 ---
 
-## 🚀 Funcionalidades Principais
+## Como executar
 
-1. **Painel de Métricas & KPIs**:
-   - Total de chamados no sistema;
-   - Incidentes em atendimento ativo (abertos vs em análise);
-   - Alerta visual para incidentes críticos que exigem ação imediata;
-   - Taxa de conformidade de SLA em tempo real;
-   - Tempo Médio de Resolução (MTTR) em horas.
+### Pré-requisitos
 
-2. **Gráficos Analíticos (Recharts)**:
-   - Volumetria temporal de 7 dias (abertos vs concluídos) com linhas finas e gradientes discretos;
-   - Distribuição de risco por nível de severidade e categorias ativas.
+- **Desenvolvimento:** Java 17+ e Node.js 20+
+- **Produção local:** Docker com Docker Compose
 
-3. **Visualização em Tabela & Quadro Kanban (Dual View)**:
-   - **Tabela**: Grid corporativo com seleção de status inline, visualização de SLA e controle de exclusão;
-   - **Quadro Kanban**: 4 colunas com movimentação ágil de chamados.
+### Desenvolvimento (H2 + dados de exemplo)
 
-4. **Filtros e Busca**:
-   - Busca instantânea por protocolo `#0001`, título, descrição ou solicitante;
-   - Segmented control de status e dropdowns de severidade e categoria.
+```bash
+./start.sh
+```
 
-5. **Modais e Gestão**:
-   - Abertura de chamados com prazos automáticos de SLA por severidade;
-   - Inspeção de protocolo com auditoria de timestamps;
-   - Gestão e cadastro de operadores e administradores;
-   - Alternância de perfil simulado direto no cabeçalho.
+Ou, em dois terminais:
+
+```bash
+./mvnw spring-boot:run            # API em http://localhost:8080 (perfil dev)
+cd frontend && npm ci && npm run dev   # Front-end em http://localhost:5173
+```
+
+| Serviço | URL |
+|---|---|
+| Aplicação | http://localhost:5173 |
+| Swagger | http://localhost:8080/swagger-ui.html |
+| Console H2 | http://localhost:8080/h2-console (JDBC URL: `jdbc:h2:file:./data/ticketsdb`) |
+
+**Usuários de desenvolvimento** (criados automaticamente apenas no perfil `dev`):
+
+| Usuário | Senha | Perfil |
+|---|---|---|
+| `admin` | `admin123` | ADMIN |
+| `jotape` | `jotape123` | ADMIN |
+| `operador` | `operador123` | USER |
+
+> Se você já rodou uma versão anterior do projeto, apague a pasta `./data` antes de subir: o schema agora é criado pelo Flyway.
+
+### Produção local (Docker Compose + PostgreSQL)
+
+```bash
+cp .env.example .env
+# edite .env: defina POSTGRES_PASSWORD, JWT_SECRET (openssl rand -base64 48) e ADMIN_PASSWORD
+docker compose up -d --build
+```
+
+A aplicação fica disponível em http://localhost:3000. Na primeira subida, o administrador é criado com `ADMIN_USERNAME`/`ADMIN_PASSWORD`.
+
+### Variáveis de ambiente (perfil `prod`)
+
+| Variável | Obrigatória | Descrição |
+|---|:-:|---|
+| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | ✅ | Conexão com o PostgreSQL |
+| `JWT_SECRET` | ✅ | Segredo de assinatura do token (mín. 32 bytes) |
+| `JWT_EXPIRATION` | | Validade do token, formato ISO-8601 (padrão `PT8H`) |
+| `ADMIN_USERNAME`, `ADMIN_PASSWORD` | | Cria o admin inicial se não houver usuários |
+| `CORS_ALLOWED_ORIGINS` | | Origens liberadas, separadas por vírgula (desnecessário atrás do Nginx) |
+| `SWAGGER_ENABLED` | | `true` para expor o Swagger em produção (padrão `false`) |
 
 ---
 
-## 🔌 Documentação da API REST (Swagger)
+## API
 
-Acesse a documentação interativa Swagger/OpenAPI em:
-👉 `http://localhost:8080/swagger-ui.html`
+Documentação interativa em `/swagger-ui.html` (perfil dev). Todas as rotas, exceto login e health, exigem o header `Authorization: Bearer <token>`.
 
-### Endpoints Principais:
+```bash
+# 1. Login
+curl -s localhost:8080/api/auth/login -H 'Content-Type: application/json' \
+  -d '{"username":"admin","password":"admin123"}'
+# => {"accessToken":"eyJ...","tokenType":"Bearer","expiresAt":"...","user":{...}}
+
+# 2. Usar o token
+curl -s localhost:8080/api/tickets -H "Authorization: Bearer eyJ..."
+```
 
 | Método | Endpoint | Descrição |
 |---|---|---|
-| `GET` | `/api/tickets` | Lista chamados com filtros (`status`, `priority`, `category`, `requester`, `search`) |
-| `GET` | `/api/tickets/{id}` | Consulta detalhes de um chamado por ID |
-| `POST` | `/api/tickets` | Cria um novo chamado no sistema |
-| `PUT` | `/api/tickets/{id}` | Atualização completa de dados |
-| `PATCH` | `/api/tickets/{id}/status` | Atualiza status (`Aberto`, `Em Análise`, `Concluído`, `Encerrado`) |
-| `PATCH` | `/api/tickets/{id}/priority` | Atualiza prioridade (`Baixa`, `Média`, `Alta`, `Crítica`) |
-| `DELETE` | `/api/tickets/{id}` | Remove um chamado |
-| `GET` | `/api/metrics` | Retorna KPIs, estatísticas de SLA e volumetria |
-| `GET` | `/api/users` | Lista usuários e administradores |
-| `POST` | `/api/users` | Cadastra novo usuário |
-| `POST` | `/api/auth/login` | Autenticação de operador |
-| `GET` | `/api/health` | Status de integridade do servidor |
+| `POST` | `/api/auth/login` | Autentica e retorna o token JWT |
+| `GET` | `/api/auth/me` | Dados do usuário autenticado |
+| `GET` | `/api/tickets` | Lista chamados (filtros: `status`, `priority`, `category`, `requester`, `search`) |
+| `GET` | `/api/tickets/{id}` | Detalhes de um chamado |
+| `POST` | `/api/tickets` | Abre um chamado |
+| `PUT` | `/api/tickets/{id}` | Atualiza um chamado |
+| `PATCH` | `/api/tickets/{id}/status` | Altera o status |
+| `PATCH` | `/api/tickets/{id}/priority` | Altera a prioridade (ADMIN) |
+| `DELETE` | `/api/tickets/{id}` | Exclui (ADMIN ou solicitante) |
+| `GET` | `/api/metrics` | KPIs, SLA e volumetria |
+| `GET` | `/api/users` | Lista usuários |
+| `POST` | `/api/users` | Cadastra usuário (ADMIN) |
+| `GET` | `/api/health` | Health check (público) |
 
----
+Erros seguem um formato único:
 
-## 💻 Como Executar
-
-### Opção 1: Inicialização Conjunta em 1 Comando (Recomendado)
-```bash
-./start.sh
-# ou:
-npm start
-```
-- **Front-end**: [http://localhost:5173](http://localhost:5173)
-- **Back-end**: [http://localhost:8080](http://localhost:8080)
-- **Swagger**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
-- **H2 Console**: [http://localhost:8080/h2-console](http://localhost:8080/h2-console)
-
-### Opção 2: Execução Separada
-```bash
-# Terminal 1 - Back-end:
-./mvnw spring-boot:run
-
-# Terminal 2 - Front-end:
-cd frontend && npm run dev
-```
-
-### Opção 3: Docker Compose
-```bash
-docker-compose up
+```json
+{ "timestamp": "...", "status": 400, "error": "Bad Request", "message": "O título é obrigatório.", "errors": { "title": "O título é obrigatório." } }
 ```
 
 ---
 
-## 🧪 Validação dos Builds
+## Testes e qualidade
 
 ```bash
-# 1. Testes e build do Back-end
-./mvnw clean test package
-
-# 2. Build de produção do Front-end (TypeScript + Vite)
+./mvnw verify                 # back-end: testes de serviço, segurança e contrato de erros
 cd frontend
-npm run build
+npm run lint                  # ESLint
+npm test                      # Vitest + Testing Library
+npm run build                 # type-check + build de produção
 ```
+
+O workflow de [CI](.github/workflows/ci.yml) roda tudo isso em cada push e pull request, além de construir as imagens Docker. O Dependabot mantém as dependências atualizadas.
 
 ---
 
-## 👤 Usuários Padrão para Testes
+## Licença
 
-| Usuário | Senha | Perfil | Permissões |
-|---|---|---|---|
-| `admin` | `123` | Administrador | Acesso total, prioridades, usuários, deleção |
-| `jotape` | `123` | Tech Lead / Admin | Acesso total e resolução de chamados |
-| `operador` | `123` | Operador de Suporte | Abertura de chamados, consulta e atualização de status |
+[MIT](LICENSE)
