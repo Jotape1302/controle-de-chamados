@@ -22,10 +22,9 @@ public class HealthController {
     public ResponseEntity<Map<String, Object>> health() {
         return ResponseEntity.ok(Map.of(
                 "status", "ONLINE",
-                "service", "Homeney Cyber Ticket API",
+                "service", "homeney-tickets",
                 "version", "2.0.0",
-                "timestamp", LocalDateTime.now(),
-                "environment", "production-ready"
+                "timestamp", LocalDateTime.now()
         ));
     }
 }

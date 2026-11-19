@@ -14,9 +14,9 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Homeney Cyber Ticket API")
+                        .title("Homeney Ticket API")
                         .version("2.0.0")
-                        .description("API REST moderna para gerenciamento centralizado de chamados e suporte técnico com estética Dark Tech HUD.")
+                        .description("API REST para gestão de chamados de suporte técnico e acompanhamento de SLA.")
                         .contact(new Contact()
                                 .name("Equipe Homeney")
                                 .email("dev@homeney.local"))
